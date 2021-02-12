@@ -1,10 +1,10 @@
 function realign_1p( varargin )
 % function realign_1p
-% Realigns 2d one-photon calcium imaging stacks
+% Realigns one-photon (epifluorescence) calcium imaging stacks
 %
 % Dependencies:
 % - https://github.com/simonsfoundation/NoRMCorre.git
-% 
+%
 % Pieter Goltstein & Annet Glas
 % October 31, 2017 - Version 0.1
 %
@@ -19,16 +19,16 @@ function realign_1p( varargin )
     % Parameters non-rigid alignment
     gSigma_align = 9; % width of the gaussian kernel
     gSize_align = 25; % maximum diameter of blobs
-        
+
     % Or automatically load the first stack
     ImFiles = dir('*.tif');
     ImFile = ImFiles(1).name;
-    
+
     % Do it
     AlignedStackName = 'AlignedStack';
-    fprintf('\n---------------- realign_1p_gg ----------------\n\n');
+    fprintf('\n---------------- realign_1p ----------------\n\n');
     fprintf('Datadir: %s\n', pwd);
-    
+
     %% Settings
     meta = struct;
     meta.frameRate = 10; % Hz
@@ -57,7 +57,7 @@ function realign_1p( varargin )
     ImData = zeros( meta.orig_yRes, meta.orig_xRes, meta.orig_nFrames , 'uint16' );
     meta.TimeStamps = zeros(1,meta.orig_nFrames );
     fprintf('Loading frame: %6d',0);
-    for f = 1:meta.orig_nFrames 
+    for f = 1:meta.orig_nFrames
         fprintf('\b\b\b\b\b\b%6d',f);
         TiffInfo.setDirectory(f);
         ImData(:,:,f) = TiffInfo.read();
@@ -75,7 +75,7 @@ function realign_1p( varargin )
     avgFrameBrightness = squeeze(mean(mean(ImData,1),2));
     medianBrightness = median(avgFrameBrightness);
     meta.droppedFrames = find(avgFrameBrightness<(medianBrightness/10));
-    fprintf('\nInterpolating %d dropped frames\n', length(meta.droppedFrames));    
+    fprintf('\nInterpolating %d dropped frames\n', length(meta.droppedFrames));
     for f = meta.droppedFrames
         ImData(:,:,f) = ImData(:,:,f-1);
     end
@@ -106,7 +106,7 @@ function realign_1p( varargin )
         fprintf('Loaded: ImageRegistration.mat\n');
     end
 
-    fprintf('\nExecuting non-rigid image registration using NoRMCorre\n');
+    fprintf('\nApplying non-rigid image registration using NoRMCorre\n');
     ImData = apply_shifts(ImData,regShifts,NoRMCorre_options);
     warning('on'); % Aaaand warnings back on..
     clear fImData;
@@ -115,14 +115,14 @@ function realign_1p( varargin )
     %% Quality check
     nZerosPerFrame = zeros(1,meta.orig_nFrames);
     fprintf('Quality check, frame: %6d',0);
-    for f = 1:meta.orig_nFrames 
+    for f = 1:meta.orig_nFrames
         fprintf('\b\b\b\b\b\b%6d',f);
         nZerosPerFrame(f) = sum(sum(ImData(:,:,f)==0));
     end
     fprintf(' ... done\n');
     meta.crappyFrames = find(nZerosPerFrame>100);
     meta.goodFrames = find(nZerosPerFrame<=100);
-    fprintf('\nInterpolating %d crappy frames\n', length(meta.crappyFrames));    
+    fprintf('\nInterpolating %d crappy frames\n', length(meta.crappyFrames));
     for f = meta.crappyFrames
         if f < meta.goodFrames(1)
             ImData(:,:,f) = ImData(:,:,meta.goodFrames(1));
@@ -144,7 +144,6 @@ function realign_1p( varargin )
     fprintf(' ... done\n');
     clear ImData;
     Ysiz = [meta.yRes, meta.xRes, meta.nFrames]';
-    save([AlignedStackName '.mat',], 'Y', 'Ysiz', 'meta', '-v7.3'); 
-    
+    save([AlignedStackName '.mat',], 'Y', 'Ysiz', 'meta', '-v7.3');
+
 end
-    

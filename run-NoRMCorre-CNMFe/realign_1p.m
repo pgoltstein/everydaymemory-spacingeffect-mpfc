@@ -1,6 +1,7 @@
 function realign_1p( varargin )
 % function realign_1p
-% Realigns one-photon (epifluorescence) calcium imaging stacks
+% Realigns one-photon (epifluorescence) calcium imaging stacks and stores a
+% downsampled aligned stack on disk
 %
 % Dependencies:
 % - https://github.com/simonsfoundation/NoRMCorre.git
